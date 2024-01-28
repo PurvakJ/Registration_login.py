@@ -67,7 +67,8 @@ def login():
         try:
             excel_file_path = 'D:/saving_DATA/data.xlsx'
             df = pd.read_excel(excel_file_path)
-            user_ids = df['User ID'].tolist()
+            user_ids = df['User ID'].max()
+            df.to_excel(excel_file_path, index=False)
             # Convert user_id column to a list
         except:
             print("No Registration Or NO Any User Found In Database")
@@ -76,8 +77,7 @@ def login():
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-
-        for user_id in user_ids:  # Rename the loop variable to avoid confusion
+        for user_id in range(1, user_ids+1):  # Rename the loop variable to avoid confusion
             reference_img = cv2.imread(f"D:/saving_DATA/user{user_id}/User_{user_id}.jpg", cv2.IMREAD_GRAYSCALE)
 
             def check_face(frame):
