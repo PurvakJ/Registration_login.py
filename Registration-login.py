@@ -62,74 +62,71 @@ def registration():
     print(f"Photo saved to: {photo_full_path}")
 
 def login():
-    while True:
-        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-        try:
-            excel_file_path = 'D:/saving_DATA/data.xlsx'
-            df = pd.read_excel(excel_file_path)
-            user_ids = df['User ID'].max()
-            df.to_excel(excel_file_path, index=False)
-            # Convert user_id column to a list
-        except:
-            print("No Registration Or NO Any User Found In Database")
-            return
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    try:
+        excel_file_path = 'D:/saving_DATA/data.xlsx'
+        df = pd.read_excel(excel_file_path)
+        user_ids = df['User ID'].max()
+        df.to_excel(excel_file_path, index=False)
+        # Convert user_id column to a list
+    except:
+        print("No Registration Or NO Any User Found In Database")
+        return
 
+    for user_id in range(1, user_ids+1):  # Rename the loop variable to avoid confusion
         cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        for user_id in range(1, user_ids+1):  # Rename the loop variable to avoid confusion
-            reference_img = cv2.imread(f"D:/saving_DATA/user{user_id}/User_{user_id}.jpg", cv2.IMREAD_GRAYSCALE)
+        reference_img = cv2.imread(f"D:/saving_DATA/user{user_id}/User_{user_id}.jpg", cv2.IMREAD_GRAYSCALE)
+        print(user_id)
+        def check_face(frame):
+            try:
+                gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
 
-            def check_face(frame):
-                try:
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.3, minNeighbors=5)
+                if len(faces) > 0:
+                    x, y, w, h = faces[0]
+                    current_face = gray[y:y + h, x:x + w]
+                    reference_face = cv2.resize(reference_img, (w, h))
 
-                    if len(faces) > 0:
-                        x, y, w, h = faces[0]
-                        current_face = gray[y:y + h, x:x + w]
-                        reference_face = cv2.resize(reference_img, (w, h))
-
-                        # Dummy implementation - always consider it a match
-                        return True
-                    else:
-                        return False
-                except Exception as e:
-                    print(f"Error: {e}")
+                    # Dummy implementation - always consider it a match
+                    return True
+                else:
                     return False
+            except Exception as e:
+                print(f"Error: {e}")
+                return False
 
-            while True:
-                ret, frame = cap.read()
-                if ret:
-                    if threading.active_count() < 2:
-                        result = check_face(frame.copy())
-                        threading.Thread(target=lambda: process_result(result)).start()
+        for i in range(1, 11):
+            ret, frame = cap.read()
+            if ret:
+                if threading.active_count() < 2:
+                    result = check_face(frame.copy())
+                    threading.Thread(target=lambda: process_result(result)).start()
 
-                    if check_face(frame):
-                        cap.release()
-                        cv2.destroyAllWindows()
-                        excel_file_path = f'D:/saving_DATA/user{user_id}/data{user_id}.xlsx'
-                        df = pd.read_excel(excel_file_path)
-                        # Assuming 'name' is a column in the DataFrame
-                        name_value = df.at[0, 'name']  # Assuming the name is in the first row (index 0)
-                        print(f"Name for User {user_id}: {name_value}")
-                        return True
-                    else:
-                        print("Authentication error!!!")
-                        global counting
-                        counting += 1
-                        time.sleep(2)
-                        if counting == 10:
-                            print("You do not have access to operate the AI.")
-                            return False
+                if check_face(frame):
+                    cap.release()
+                    cv2.destroyAllWindows()
+                    excel_file_path = f'D:/saving_DATA/user{user_id}/data{user_id}.xlsx'
+                    df = pd.read_excel(excel_file_path)
+                    # Assuming 'name' is a column in the DataFrame
+                    name_value = df.at[0, 'name']  # Assuming the name is in the first row (index 0)
+                    print(f"Name for User {user_id}: {name_value}")
+                    return True
+                else:
+                    print("Authentication error!!!")
+                    global counting
+                    counting += 1
+                    time.sleep(2)
+                    if counting == 10:
+                        print("You do not have access to operate the AI.")
 
-                    cv2.imshow("video", frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
+                cv2.imshow("video", frame)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
 
-            cap.release()
-            cv2.destroyAllWindows()
-            return False
+        cap.release()
+        cv2.destroyAllWindows()
 
 
 
